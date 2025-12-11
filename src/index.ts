@@ -56,6 +56,14 @@ import {
   createMarketSizingSchema,
   updateMarketSizing,
   updateMarketSizingSchema,
+  // OpenAI Deep Research
+  configureOpenAI,
+  configureOpenAISchema,
+  checkOpenAIConfig,
+  deepResearch,
+  deepResearchSchema,
+  populateFramework,
+  populateFrameworkSchema,
 } from "./tools/index.js";
 
 import { getEntity } from "./storage/index.js";
@@ -379,6 +387,58 @@ server.tool(
   { title: "Update an existing Market Sizing analysis" },
   async (args) => {
     const result = await updateMarketSizing(updateMarketSizingSchema.parse(args));
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+    };
+  }
+);
+
+// ============================================================================
+// OPENAI DEEP RESEARCH
+// ============================================================================
+
+server.tool(
+  "configure_openai",
+  configureOpenAISchema.shape,
+  { title: "Configure OpenAI API key for Deep Research (alternative to OPENAI_API_KEY env var)" },
+  async (args) => {
+    const result = await configureOpenAI(configureOpenAISchema.parse(args));
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+    };
+  }
+);
+
+server.tool(
+  "check_openai_config",
+  {},
+  { title: "Check if OpenAI API key is configured" },
+  async () => {
+    const result = await checkOpenAIConfig();
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+    };
+  }
+);
+
+server.tool(
+  "deep_research",
+  deepResearchSchema.shape,
+  { title: "Execute OpenAI Deep Research to gather real market data for a framework" },
+  async (args) => {
+    const result = await deepResearch(deepResearchSchema.parse(args));
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+    };
+  }
+);
+
+server.tool(
+  "populate_framework",
+  populateFrameworkSchema.shape,
+  { title: "Create a framework entity from Deep Research results with citations" },
+  async (args) => {
+    const result = await populateFramework(populateFrameworkSchema.parse(args));
     return {
       content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
     };

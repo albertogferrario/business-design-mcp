@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ResearchMetadataSchema } from "./citations.js";
 
 // Base schema for all entities
 export const BaseEntitySchema = z.object({
@@ -6,6 +7,7 @@ export const BaseEntitySchema = z.object({
   projectId: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  researchMetadata: ResearchMetadataSchema.optional(),
 });
 
 // Business Model Canvas - Alexander Osterwalder's 9 blocks

@@ -3,7 +3,8 @@ import { join } from "path";
 import { homedir } from "os";
 import type { Project, EntityType } from "../schemas/index.js";
 
-const DATA_DIR = join(homedir(), ".business-design");
+// Allow override via environment variable for testing
+const DATA_DIR = process.env.BUSINESS_DESIGN_DATA_DIR || join(homedir(), ".business-design");
 const PROJECTS_DIR = join(DATA_DIR, "projects");
 const ENTITIES_DIR = join(DATA_DIR, "entities");
 

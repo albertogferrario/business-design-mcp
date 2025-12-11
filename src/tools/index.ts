@@ -86,3 +86,14 @@ export {
   getMarketSizing,
   listMarketSizings,
 } from "./market.js";
+
+// OpenAI Deep Research
+export {
+  configureOpenAI,
+  configureOpenAISchema,
+  checkOpenAIConfig,
+  deepResearch,
+  deepResearchSchema,
+  populateFramework,
+  populateFrameworkSchema,
+} from "./research.js";
