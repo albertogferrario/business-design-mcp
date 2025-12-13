@@ -55,6 +55,8 @@ describe("Storage Layer", () => {
 
     it("should update a project", async () => {
       const created = await createProject("Original Name");
+      // Small delay to ensure timestamp difference
+      await new Promise((r) => setTimeout(r, 10));
       const updated = await updateProject({
         ...created,
         name: "Updated Name",

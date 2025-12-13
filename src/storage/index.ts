@@ -3,14 +3,57 @@ import { join } from "path";
 import { homedir } from "os";
 import type { Project, EntityType } from "../schemas/index.js";
 
-// Allow override via environment variable for testing
-const DATA_DIR = process.env.BUSINESS_DESIGN_DATA_DIR || join(homedir(), ".business-design");
-const PROJECTS_DIR = join(DATA_DIR, "projects");
-const ENTITIES_DIR = join(DATA_DIR, "entities");
+// Storage error types
+export type StorageErrorCode =
+  | "NOT_FOUND"
+  | "WRITE_FAILED"
+  | "READ_FAILED"
+  | "DELETE_FAILED"
+  | "INVALID_DATA";
+
+export class StorageError extends Error {
+  constructor(
+    message: string,
+    public code: StorageErrorCode,
+    public cause?: unknown
+  ) {
+    super(message);
+    this.name = "StorageError";
+  }
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error;
+}
+
+// Lazy directory resolution for testing support
+function getDataDir(): string {
+  return process.env.BUSINESS_DESIGN_DATA_DIR || join(homedir(), ".business-design");
+}
+
+function getProjectsDir(): string {
+  return join(getDataDir(), "projects");
+}
+
+function getEntitiesDir(): string {
+  return join(getDataDir(), "entities");
+}
+
+// Initialize directories once per data dir
+let initializedDataDir: string | null = null;
 
 async function ensureDirectories(): Promise<void> {
-  await fs.mkdir(PROJECTS_DIR, { recursive: true });
-  await fs.mkdir(ENTITIES_DIR, { recursive: true });
+  const currentDataDir = getDataDir();
+  if (initializedDataDir === currentDataDir) return;
+
+  await fs.mkdir(getProjectsDir(), { recursive: true });
+  await fs.mkdir(getEntitiesDir(), { recursive: true });
+  initializedDataDir = currentDataDir;
+}
+
+// Reset initialization (for testing)
+export function resetDirectoryInit(): void {
+  initializedDataDir = null;
 }
 
 function generateId(): string {
@@ -40,7 +83,7 @@ export async function createProject(
   };
 
   await fs.writeFile(
-    join(PROJECTS_DIR, `${project.id}.json`),
+    join(getProjectsDir(), `${project.id}.json`),
     JSON.stringify(project, null, 2)
   );
 
@@ -50,10 +93,17 @@ export async function createProject(
 export async function getProject(projectId: string): Promise<Project | null> {
   await ensureDirectories();
   try {
-    const data = await fs.readFile(join(PROJECTS_DIR, `${projectId}.json`), "utf-8");
+    const data = await fs.readFile(join(getProjectsDir(), `${projectId}.json`), "utf-8");
     return JSON.parse(data) as Project;
-  } catch {
-    return null;
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") {
+      return null;
+    }
+    throw new StorageError(
+      `Failed to read project ${projectId}`,
+      "READ_FAILED",
+      error
+    );
   }
 }
 
@@ -61,7 +111,7 @@ export async function updateProject(project: Project): Promise<Project> {
   await ensureDirectories();
   project.updatedAt = timestamp();
   await fs.writeFile(
-    join(PROJECTS_DIR, `${project.id}.json`),
+    join(getProjectsDir(), `${project.id}.json`),
     JSON.stringify(project, null, 2)
   );
   return project;
@@ -69,41 +119,48 @@ export async function updateProject(project: Project): Promise<Project> {
 
 export async function deleteProject(projectId: string): Promise<boolean> {
   await ensureDirectories();
+  const project = await getProject(projectId);
+  if (!project) return false;
+
+  // Delete all associated entities
+  await Promise.all(project.entities.map((ref) => deleteEntity(ref.id)));
+
   try {
-    const project = await getProject(projectId);
-    if (!project) return false;
-
-    // Delete all associated entities
-    for (const entityRef of project.entities) {
-      await deleteEntity(entityRef.id);
-    }
-
-    await fs.unlink(join(PROJECTS_DIR, `${projectId}.json`));
+    await fs.unlink(join(getProjectsDir(), `${projectId}.json`));
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") {
+      return false;
+    }
+    throw new StorageError(
+      `Failed to delete project ${projectId}`,
+      "DELETE_FAILED",
+      error
+    );
   }
 }
 
 export async function listProjects(): Promise<Project[]> {
   await ensureDirectories();
-  try {
-    const files = await fs.readdir(PROJECTS_DIR);
-    const projects: Project[] = [];
+  const files = await fs.readdir(getProjectsDir());
+  const jsonFiles = files.filter((f) => f.endsWith(".json"));
 
-    for (const file of files) {
-      if (file.endsWith(".json")) {
-        const data = await fs.readFile(join(PROJECTS_DIR, file), "utf-8");
-        projects.push(JSON.parse(data) as Project);
+  const projects = await Promise.all(
+    jsonFiles.map(async (file) => {
+      try {
+        const data = await fs.readFile(join(getProjectsDir(), file), "utf-8");
+        return JSON.parse(data) as Project;
+      } catch (error) {
+        // Log but don't fail entire list for one corrupt file
+        console.error(`Failed to read project file ${file}:`, error);
+        return null;
       }
-    }
+    })
+  );
 
-    return projects.sort(
-      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
-  } catch {
-    return [];
-  }
+  return projects
+    .filter((p): p is Project => p !== null)
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 }
 
 // Entity operations
@@ -127,7 +184,7 @@ export async function createEntity<T extends EntityType>(
   } as T;
 
   await fs.writeFile(
-    join(ENTITIES_DIR, `${fullEntity.id}.json`),
+    join(getEntitiesDir(), `${fullEntity.id}.json`),
     JSON.stringify(fullEntity, null, 2)
   );
 
@@ -144,10 +201,17 @@ export async function createEntity<T extends EntityType>(
 export async function getEntity<T extends EntityType>(entityId: string): Promise<T | null> {
   await ensureDirectories();
   try {
-    const data = await fs.readFile(join(ENTITIES_DIR, `${entityId}.json`), "utf-8");
+    const data = await fs.readFile(join(getEntitiesDir(), `${entityId}.json`), "utf-8");
     return JSON.parse(data) as T;
-  } catch {
-    return null;
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") {
+      return null;
+    }
+    throw new StorageError(
+      `Failed to read entity ${entityId}`,
+      "READ_FAILED",
+      error
+    );
   }
 }
 
@@ -155,7 +219,7 @@ export async function updateEntity<T extends EntityType>(entity: T): Promise<T> 
   await ensureDirectories();
   entity.updatedAt = timestamp();
   await fs.writeFile(
-    join(ENTITIES_DIR, `${entity.id}.json`),
+    join(getEntitiesDir(), `${entity.id}.json`),
     JSON.stringify(entity, null, 2)
   );
   return entity;
@@ -163,21 +227,28 @@ export async function updateEntity<T extends EntityType>(entity: T): Promise<T> 
 
 export async function deleteEntity(entityId: string): Promise<boolean> {
   await ensureDirectories();
+  const entity = await getEntity(entityId);
+  if (!entity) return false;
+
+  // Remove from project
+  const project = await getProject(entity.projectId);
+  if (project) {
+    project.entities = project.entities.filter((e) => e.id !== entityId);
+    await updateProject(project);
+  }
+
   try {
-    const entity = await getEntity(entityId);
-    if (!entity) return false;
-
-    // Remove from project
-    const project = await getProject(entity.projectId);
-    if (project) {
-      project.entities = project.entities.filter((e) => e.id !== entityId);
-      await updateProject(project);
-    }
-
-    await fs.unlink(join(ENTITIES_DIR, `${entityId}.json`));
+    await fs.unlink(join(getEntitiesDir(), `${entityId}.json`));
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") {
+      return false;
+    }
+    throw new StorageError(
+      `Failed to delete entity ${entityId}`,
+      "DELETE_FAILED",
+      error
+    );
   }
 }
 
@@ -186,15 +257,11 @@ export async function listEntitiesByProject(projectId: string): Promise<EntityTy
   const project = await getProject(projectId);
   if (!project) return [];
 
-  const entities: EntityType[] = [];
-  for (const ref of project.entities) {
-    const entity = await getEntity(ref.id);
-    if (entity) {
-      entities.push(entity);
-    }
-  }
+  const entities = await Promise.all(
+    project.entities.map((ref) => getEntity(ref.id))
+  );
 
-  return entities;
+  return entities.filter((e): e is EntityType => e !== null);
 }
 
 export async function listEntitiesByType(

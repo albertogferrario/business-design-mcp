@@ -5,8 +5,8 @@ import { ResearchMetadataSchema } from "./citations.js";
 export const BaseEntitySchema = z.object({
   id: z.string(),
   projectId: z.string(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
   researchMetadata: ResearchMetadataSchema.optional(),
 });
 
@@ -244,7 +244,7 @@ export const CompetitiveAnalysisSchema = z.object({
 
   competitors: z.array(z.object({
     name: z.string(),
-    website: z.string().optional(),
+    website: z.string().url().optional(),
     description: z.string().optional(),
 
     strengths: z.array(z.string()),
@@ -325,8 +325,8 @@ export const ProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
   tags: z.array(z.string()).optional(),
 
   // References to contained entities

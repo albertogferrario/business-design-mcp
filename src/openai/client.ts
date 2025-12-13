@@ -31,6 +31,73 @@ export class OpenAIConfigError extends Error {
   }
 }
 
+// Retry configuration
+export interface RetryConfig {
+  maxRetries: number;
+  initialDelayMs: number;
+  maxDelayMs: number;
+  backoffMultiplier: number;
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  initialDelayMs: 1000,
+  maxDelayMs: 30000,
+  backoffMultiplier: 2,
+};
+
+function isRetryableError(error: unknown): boolean {
+  if (error instanceof OpenAI.APIError) {
+    // Retry on rate limits (429) and server errors (5xx)
+    return error.status === 429 || (error.status >= 500 && error.status < 600);
+  }
+  // Retry on network errors
+  if (error instanceof Error) {
+    return error.message.includes("ECONNRESET") ||
+           error.message.includes("ETIMEDOUT") ||
+           error.message.includes("ENOTFOUND");
+  }
+  return false;
+}
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  config: RetryConfig = DEFAULT_RETRY_CONFIG
+): Promise<T> {
+  let lastError: unknown;
+  let delay = config.initialDelayMs;
+
+  for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+
+      if (!isRetryableError(error) || attempt === config.maxRetries) {
+        throw error;
+      }
+
+      // Add jitter to prevent thundering herd
+      const jitter = Math.random() * 0.3 * delay;
+      const waitTime = Math.min(delay + jitter, config.maxDelayMs);
+
+      console.error(
+        `OpenAI request failed (attempt ${attempt + 1}/${config.maxRetries + 1}), ` +
+        `retrying in ${Math.round(waitTime)}ms...`
+      );
+
+      await sleep(waitTime);
+      delay *= config.backoffMultiplier;
+    }
+  }
+
+  throw lastError;
+}
+
 export type DeepResearchModel =
   | "o3-deep-research-2025-06-26"
   | "o4-mini-deep-research-2025-06-26";
@@ -59,24 +126,30 @@ export interface DeepResearchResult {
 }
 
 export async function executeDeepResearch(
-  options: DeepResearchOptions
+  options: DeepResearchOptions,
+  retryConfig?: Partial<RetryConfig>
 ): Promise<DeepResearchResult> {
   const client = getOpenAIClient();
+  const config = { ...DEFAULT_RETRY_CONFIG, ...retryConfig };
 
-  const response = await client.responses.create({
-    model: options.model,
-    input: [
-      {
-        role: "developer",
-        content: [{ type: "input_text", text: options.systemPrompt }],
-      },
-      {
-        role: "user",
-        content: [{ type: "input_text", text: options.userPrompt }],
-      },
-    ],
-    tools: [{ type: "web_search_preview" }],
-  });
+  const response = await withRetry(
+    () =>
+      client.responses.create({
+        model: options.model,
+        input: [
+          {
+            role: "developer",
+            content: [{ type: "input_text", text: options.systemPrompt }],
+          },
+          {
+            role: "user",
+            content: [{ type: "input_text", text: options.userPrompt }],
+          },
+        ],
+        tools: [{ type: "web_search_preview" }],
+      }),
+    config
+  );
 
   // Extract the final text content
   const outputItems = response.output || [];
