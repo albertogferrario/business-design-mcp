@@ -1,6 +1,5 @@
 import { promises as fs } from "fs";
 import { join } from "path";
-import { homedir } from "os";
 import type { Project, EntityType } from "../schemas/index.js";
 
 // Storage error types
@@ -28,7 +27,7 @@ function isNodeError(error: unknown): error is NodeJS.ErrnoException {
 
 // Lazy directory resolution for testing support
 function getDataDir(): string {
-  return process.env.BUSINESS_DESIGN_DATA_DIR || join(homedir(), ".business-design");
+  return process.env.BUSINESS_DESIGN_DATA_DIR || join(process.cwd(), ".business-design");
 }
 
 function getProjectsDir(): string {
