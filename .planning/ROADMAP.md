@@ -33,7 +33,7 @@ Plans:
 
 ### 🚧 v1.1 UX Improvements
 
-- [ ] **Phase 3: Deep Research UX** - Streamline research → framework flow
+- [x] **Phase 3: Deep Research UX** - Streamline research → framework flow ✅
 - [ ] **Phase 4: Cross-framework Linking** - Connect entities across frameworks
 
 ## Phase Details
@@ -52,8 +52,8 @@ Target flow:
 1. `research_and_create` → single tool that does both
 
 Plans:
-- [ ] 03-01: Create combined research_and_create tool
-- [ ] 03-02: Update tool descriptions for better discoverability
+- [x] 03-01: Create combined research_and_create tool
+- [x] 03-02: Update tool descriptions for better discoverability
 
 Plan files: `.planning/phases/03-deep-research-ux/`
 
@@ -83,5 +83,5 @@ Phases 3 and 4 can run in parallel.
 |-------|----------------|--------|-----------|
 | 1. NPX Installation | 1/1 | Complete | 2026-01-14 |
 | 2. Documentation | - | Complete | 2026-01-14 |
-| 3. Deep Research UX | 0/2 | Planned | - |
+| 3. Deep Research UX | 2/2 | Complete | 2026-01-15 |
 | 4. Cross-framework Linking | 0/3 | Not started | - |
