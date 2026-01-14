@@ -83,6 +83,13 @@ import {
   populateFrameworkSchema,
   researchAndCreate,
   researchAndCreateSchema,
+  // Entity Linking
+  linkEntitiesTool,
+  linkEntitiesSchema,
+  unlinkEntitiesTool,
+  unlinkEntitiesSchema,
+  getLinkedEntitiesTool,
+  getLinkedEntitiesSchema,
 } from "./tools/index.js";
 
 import { getEntity } from "./storage/index.js";
@@ -331,6 +338,31 @@ server.tool(
   {},
   { title: "Check if OpenAI API key is configured for Deep Research" },
   async () => jsonResponse(await checkOpenAIConfig())
+);
+
+// ============================================================================
+// ENTITY LINKING
+// ============================================================================
+
+server.tool(
+  "link_entities",
+  linkEntitiesSchema.shape,
+  { title: "Link two entities together (e.g., persona to canvas)" },
+  async (args) => jsonResponse(await linkEntitiesTool(linkEntitiesSchema.parse(args)))
+);
+
+server.tool(
+  "unlink_entities",
+  unlinkEntitiesSchema.shape,
+  { title: "Remove a link between two entities" },
+  async (args) => jsonResponse(await unlinkEntitiesTool(unlinkEntitiesSchema.parse(args)))
+);
+
+server.tool(
+  "get_linked_entities",
+  getLinkedEntitiesSchema.shape,
+  { title: "Get all entities linked to a given entity" },
+  async (args) => jsonResponse(await getLinkedEntitiesTool(getLinkedEntitiesSchema.parse(args)))
 );
 
 // ============================================================================
