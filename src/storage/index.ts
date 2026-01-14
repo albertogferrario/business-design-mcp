@@ -439,6 +439,12 @@ export async function exportProjectToMarkdown(projectId: string): Promise<string
 
   const entities = await listEntitiesByProject(projectId);
 
+  // Build a map of entity id -> entity for quick lookups
+  const entityMap = new Map<string, EntityType>();
+  for (const entity of entities) {
+    entityMap.set(entity.id, entity);
+  }
+
   let md = `# ${project.name}\n\n`;
 
   if (project.description) {
@@ -453,10 +459,45 @@ export async function exportProjectToMarkdown(projectId: string): Promise<string
 
   for (const entity of entities) {
     md += formatEntityAsMarkdown(entity);
+    md += formatLinkedEntitiesAsMarkdown(entity, entityMap);
     md += `\n---\n\n`;
   }
 
   return md;
+}
+
+function formatLinkedEntitiesAsMarkdown(
+  entity: EntityType,
+  entityMap: Map<string, EntityType>
+): string {
+  if (!entity.linkedEntities?.length) {
+    return "";
+  }
+
+  let md = "\n### Linked Entities\n\n";
+
+  for (const link of entity.linkedEntities) {
+    const linked = entityMap.get(link.id);
+    const name = linked?.name || link.id;
+    const rel = link.relationship ? ` (${link.relationship})` : "";
+    const typeName = formatEntityTypeName(link.type);
+    md += `- **${typeName}**: ${name}${rel}\n`;
+  }
+
+  return md;
+}
+
+function formatEntityTypeName(type: string): string {
+  switch (type) {
+    case "business-model-canvas": return "Business Model Canvas";
+    case "lean-canvas": return "Lean Canvas";
+    case "value-proposition-canvas": return "Value Proposition Canvas";
+    case "swot-analysis": return "SWOT Analysis";
+    case "user-persona": return "User Persona";
+    case "competitive-analysis": return "Competitive Analysis";
+    case "market-sizing": return "Market Sizing";
+    default: return type;
+  }
 }
 
 function formatEntityAsMarkdown(entity: EntityType): string {
