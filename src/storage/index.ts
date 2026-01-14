@@ -391,13 +391,46 @@ export async function getLinkedEntities(
 }
 
 // Export utilities
+
+interface LinkedEntityDetails {
+  id: string;
+  type: string;
+  relationship?: string;
+  name: string;
+}
+
+type EntityWithLinkDetails = EntityType & {
+  linkedEntityDetails?: LinkedEntityDetails[];
+};
+
 export async function exportProjectToJson(projectId: string): Promise<string> {
   const project = await getProject(projectId);
   if (!project) throw new Error(`Project ${projectId} not found`);
 
   const entities = await listEntitiesByProject(projectId);
 
-  return JSON.stringify({ project, entities }, null, 2);
+  // Resolve linked entity names for better readability
+  const entitiesWithDetails = await Promise.all(
+    entities.map(async (entity): Promise<EntityWithLinkDetails> => {
+      if (entity.linkedEntities?.length) {
+        const linkedEntityDetails = await Promise.all(
+          entity.linkedEntities.map(async (link) => {
+            const linked = await getEntity(link.id);
+            return {
+              id: link.id,
+              type: link.type,
+              relationship: link.relationship,
+              name: linked?.name || "Unknown",
+            };
+          })
+        );
+        return { ...entity, linkedEntityDetails };
+      }
+      return entity;
+    })
+  );
+
+  return JSON.stringify({ project, entities: entitiesWithDetails }, null, 2);
 }
 
 export async function exportProjectToMarkdown(projectId: string): Promise<string> {
