@@ -68,6 +68,16 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 - `create_market_sizing` - TAM, SAM, SOM with methodology and assumptions
 - `update_market_sizing` - Update existing analysis
 
+### Deep Research (AI-Powered)
+
+Requires OpenAI API key (set `OPENAI_API_KEY` env var or use `configure_openai`).
+
+- `research_and_create` - **Recommended**: Research and create any framework in one step
+- `deep_research` - Run AI research (use with `populate_framework`)
+- `populate_framework` - Create entity from research results
+- `configure_openai` - Set API key at runtime
+- `check_openai_config` - Verify API key configuration
+
 ## Data Storage
 
 All data is stored locally in `~/.business-design/`:
@@ -79,7 +89,7 @@ All data is stored locally in `~/.business-design/`:
 ```
 > Create a project called "My Startup"
 
-> Create a lean canvas for this project focusing on a B2B SaaS product
+> Use AI to research and create a market sizing analysis for a B2B SaaS product
 
 > Create user personas for technical buyers and end users
 
