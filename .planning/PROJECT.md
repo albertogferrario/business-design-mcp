@@ -6,7 +6,7 @@ An MCP server that provides business design framework tools to Claude Code. It e
 
 ## Core Value
 
-Simple project-local storage that keeps all business research alongside the code it informs.
+Simple npx installation for quick setup across any project.
 
 ## Requirements
 
@@ -18,11 +18,11 @@ Simple project-local storage that keeps all business research alongside the code
 - ✓ Zod schema validation for all inputs — existing
 - ✓ OpenAI Deep Research integration with retry logic — existing
 - ✓ Export to JSON and Markdown formats — existing
+- ✓ Home directory storage (`~/.business-design/`) for cross-project access — existing
 
 ### Active
 
 - [ ] Simplify installation to `npx` one-liner (like `npx get-shit-done-cc`)
-- [ ] Store data in project folder (`.get-shit-done/` or similar) instead of `~/.business-design/`
 - [ ] Update README with simpler installation instructions
 
 ### Out of Scope
@@ -30,6 +30,7 @@ Simple project-local storage that keeps all business research alongside the code
 - Database backend — file-based storage is appropriate for the use case
 - User authentication — MCP servers run locally, no auth needed
 - Web UI — this is a CLI/MCP tool
+- Project-local storage — home directory allows sharing across projects
 
 ## Context
 
@@ -37,25 +38,23 @@ This is a brownfield project with a working MCP server. The codebase analysis in
 
 Key existing patterns:
 - Storage layer in `src/storage/index.ts` uses `BUSINESS_DESIGN_DATA_DIR` env var
-- Default location is `~/.business-design/` (home directory)
+- Default location is `~/.business-design/` (home directory, shared across projects)
 - Installation currently via `npx github:albertogferrario/business-design-mcp`
 
 User wants to align with the UX patterns from [glittercowboy/get-shit-done](https://github.com/glittercowboy/get-shit-done):
 - Simple npx installation
-- Project-local data storage
 
 ## Constraints
 
 - **Tech stack**: Must remain TypeScript/Node.js MCP server
 - **Compatibility**: Must work with existing MCP clients (Claude Code)
-- **Backwards compatible**: Existing `~/.business-design/` data should still work (or migration path)
+- **Storage**: Keep home directory storage for cross-project sharing
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Project-local storage default | Keeps research with code it informs, like `.planning/` pattern | — Pending |
-| Keep home directory as fallback | Backwards compatibility for existing users | — Pending |
+| Keep home directory storage | Allows sharing business analysis across multiple projects | Confirmed |
 
 ---
-*Last updated: 2026-01-14 after initialization*
+*Last updated: 2026-01-14 after requirement change*

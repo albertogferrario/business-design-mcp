@@ -4,15 +4,15 @@
 
 See: .planning/PROJECT.md (updated 2026-01-14)
 
-**Core value:** Simple project-local storage that keeps all business research alongside the code it informs.
-**Current focus:** Phase 1 — Project-Local Storage
+**Core value:** Simple npx installation for quick setup across any project.
+**Current focus:** Phase 1 — NPX Installation
 
 ## Current Position
 
-Phase: 1 of 3 (Project-Local Storage)
-Plan: Ready to execute (2 plans created)
-Status: Plans created, ready to execute
-Last activity: 2026-01-14 — Phase 1 plans created
+Phase: 1 of 2 (NPX Installation)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-14 — Roadmap updated (removed project-local storage phase)
 
 Progress: ░░░░░░░░░░ 0%
 
@@ -40,7 +40,7 @@ Progress: ░░░░░░░░░░ 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-(None yet)
+- Keep home directory storage for cross-project sharing
 
 ### Pending Todos
 
@@ -53,5 +53,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-14
-Stopped at: Phase 1 plans created
+Stopped at: Roadmap updated after requirement change
 Resume file: None
