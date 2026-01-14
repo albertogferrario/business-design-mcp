@@ -11,7 +11,7 @@ None
 ## Milestones
 
 - ✅ **v1.0 NPX Installation** - Phases 1-2 (shipped 2026-01-14)
-- 🚧 **v1.1 UX Improvements** - Phases 3-4 (in progress)
+- ✅ **v1.1 UX Improvements** - Phases 3-4 (shipped 2026-01-15)
 
 ## Phases
 
@@ -31,10 +31,10 @@ Plans:
 
 </details>
 
-### 🚧 v1.1 UX Improvements
+### ✅ v1.1 UX Improvements - SHIPPED 2026-01-15
 
 - [x] **Phase 3: Deep Research UX** - Streamline research → framework flow ✅
-- [ ] **Phase 4: Cross-framework Linking** - Connect entities across frameworks
+- [x] **Phase 4: Cross-framework Linking** - Connect entities across frameworks ✅
 
 ## Phase Details
 
@@ -72,7 +72,7 @@ Changes needed:
 Plans:
 - [x] 04-01: Add linking schema and storage ✅
 - [x] 04-02: Create linking tools ✅
-- [ ] 04-03: Update export to show relationships ✓ planned
+- [x] 04-03: Update export to show relationships ✅
 
 Plan files: `.planning/phases/04-cross-framework-linking/`
 
@@ -86,4 +86,4 @@ Phases 3 and 4 can run in parallel.
 | 1. NPX Installation | 1/1 | Complete | 2026-01-14 |
 | 2. Documentation | - | Complete | 2026-01-14 |
 | 3. Deep Research UX | 2/2 | Complete | 2026-01-15 |
-| 4. Cross-framework Linking | 2/3 | In Progress | - |
+| 4. Cross-framework Linking | 3/3 | Complete | 2026-01-15 |
