@@ -463,6 +463,65 @@ export async function exportProjectToMarkdown(projectId: string): Promise<string
     md += `\n---\n\n`;
   }
 
+  // Add relationships overview section
+  md += formatRelationshipsOverview(entities, entityMap);
+
+  return md;
+}
+
+interface RelationshipEntry {
+  sourceName: string;
+  sourceType: string;
+  targetName: string;
+  targetType: string;
+  relationship?: string;
+}
+
+function collectAllRelationships(
+  entities: EntityType[],
+  entityMap: Map<string, EntityType>
+): RelationshipEntry[] {
+  const relationships: RelationshipEntry[] = [];
+
+  for (const entity of entities) {
+    if (!entity.linkedEntities?.length) continue;
+
+    for (const link of entity.linkedEntities) {
+      const target = entityMap.get(link.id);
+      relationships.push({
+        sourceName: entity.name,
+        sourceType: entity.type,
+        targetName: target?.name || link.id,
+        targetType: link.type,
+        relationship: link.relationship,
+      });
+    }
+  }
+
+  return relationships;
+}
+
+function formatRelationshipsOverview(
+  entities: EntityType[],
+  entityMap: Map<string, EntityType>
+): string {
+  const relationships = collectAllRelationships(entities, entityMap);
+
+  let md = "## Relationships Overview\n\n";
+
+  if (relationships.length === 0) {
+    md += "No entity relationships defined.\n";
+    return md;
+  }
+
+  for (const rel of relationships) {
+    md += `- ${rel.sourceName} → ${rel.targetName}`;
+    if (rel.relationship) {
+      md += ` (${rel.relationship})`;
+    }
+    md += "\n";
+  }
+
   return md;
 }
 
