@@ -98,6 +98,8 @@ describe("Storage Layer", () => {
     it("should list projects sorted by updated date (newest first)", async () => {
       const p1 = await createProject("Project 1");
       await createProject("Project 2");
+      // Small delay to ensure distinct timestamps
+      await new Promise((r) => setTimeout(r, 10));
       await updateProject({ ...p1, name: "Project 1 Updated" });
 
       const projects = await listProjects();
