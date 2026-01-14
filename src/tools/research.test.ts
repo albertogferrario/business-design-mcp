@@ -3,6 +3,7 @@ import {
   configureOpenAISchema,
   deepResearchSchema,
   populateFrameworkSchema,
+  researchAndCreateSchema,
   configureOpenAI,
   checkOpenAIConfig,
   populateFramework,
@@ -156,6 +157,108 @@ describe("Research Tool Schemas", () => {
         confidence: 85,
       });
       expect(result.success).toBe(true);
+    });
+  });
+
+  describe("researchAndCreateSchema", () => {
+    it("validates all required fields", () => {
+      const result = researchAndCreateSchema.safeParse({
+        projectId: "proj-123",
+        frameworkType: "market-sizing",
+        name: "Test Analysis",
+        context: {
+          businessDescription: "A SaaS product for developers",
+        },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects missing businessDescription", () => {
+      const result = researchAndCreateSchema.safeParse({
+        projectId: "proj-123",
+        frameworkType: "market-sizing",
+        name: "Test",
+        context: {},
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects missing name", () => {
+      const result = researchAndCreateSchema.safeParse({
+        projectId: "proj-123",
+        frameworkType: "market-sizing",
+        context: { businessDescription: "Test" },
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("validates all framework types", () => {
+      const types = [
+        "market-sizing",
+        "competitive-analysis",
+        "user-persona",
+        "swot-analysis",
+        "business-model-canvas",
+        "lean-canvas",
+        "value-proposition-canvas",
+      ];
+      for (const type of types) {
+        const result = researchAndCreateSchema.safeParse({
+          projectId: "proj-123",
+          frameworkType: type,
+          name: "Test",
+          context: { businessDescription: "Test" },
+        });
+        expect(result.success).toBe(true);
+      }
+    });
+
+    it("accepts optional description and context fields", () => {
+      const result = researchAndCreateSchema.safeParse({
+        projectId: "proj-123",
+        frameworkType: "market-sizing",
+        name: "Test Analysis",
+        description: "Optional description",
+        context: {
+          businessDescription: "A SaaS product for developers",
+          industry: "Software",
+          geography: "North America",
+          targetCustomers: "Enterprise",
+          productOrService: "Platform",
+          competitors: ["Competitor A", "Competitor B"],
+        },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("validates model enum", () => {
+      const validResult = researchAndCreateSchema.safeParse({
+        projectId: "proj-123",
+        frameworkType: "market-sizing",
+        name: "Test",
+        context: { businessDescription: "Test" },
+        model: "o4-mini-deep-research-2025-06-26",
+      });
+      expect(validResult.success).toBe(true);
+
+      const invalidResult = researchAndCreateSchema.safeParse({
+        projectId: "proj-123",
+        frameworkType: "market-sizing",
+        name: "Test",
+        context: { businessDescription: "Test" },
+        model: "invalid-model",
+      });
+      expect(invalidResult.success).toBe(false);
+    });
+
+    it("uses default model when not specified", () => {
+      const result = researchAndCreateSchema.parse({
+        projectId: "proj-123",
+        frameworkType: "market-sizing",
+        name: "Test",
+        context: { businessDescription: "Test" },
+      });
+      expect(result.model).toBe("o4-mini-deep-research-2025-06-26");
     });
   });
 });
