@@ -96,4 +96,7 @@ export {
   deepResearchSchema,
   populateFramework,
   populateFrameworkSchema,
+  researchAndCreate,
+  researchAndCreateSchema,
+  type ResearchAndCreateResponse,
 } from "./research.js";
