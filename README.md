@@ -4,20 +4,26 @@ MCP server for business and project design frameworks. Create and manage Busines
 
 ## Installation
 
+```bash
+npx business-design-mcp
+```
+
 ### Claude Code
 
 ```bash
-claude mcp add business-design -- npx -y github:albertogferrario/business-design-mcp
+claude mcp add business-design -- npx -y business-design-mcp
 ```
 
-Or add manually to `~/.claude/settings.json`:
+### Claude Desktop
+
+Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
 ```json
 {
   "mcpServers": {
     "business-design": {
       "command": "npx",
-      "args": ["-y", "github:albertogferrario/business-design-mcp"]
+      "args": ["-y", "business-design-mcp"]
     }
   }
 }
