@@ -42,7 +42,7 @@ Plans:
 **Goal**: Reduce research-to-framework from 2 tool calls to 1
 **Depends on**: Nothing
 **Research**: Unlikely (internal refactoring)
-**Plans**: TBD
+**Plans**: 2
 
 Current flow:
 1. `deep_research` → returns parsed data + citations
@@ -54,6 +54,8 @@ Target flow:
 Plans:
 - [ ] 03-01: Create combined research_and_create tool
 - [ ] 03-02: Update tool descriptions for better discoverability
+
+Plan files: `.planning/phases/03-deep-research-ux/`
 
 ### Phase 4: Cross-framework Linking
 **Goal**: Enable linking entities (persona → canvas, SWOT → competitive analysis)
@@ -81,5 +83,5 @@ Phases 3 and 4 can run in parallel.
 |-------|----------------|--------|-----------|
 | 1. NPX Installation | 1/1 | Complete | 2026-01-14 |
 | 2. Documentation | - | Complete | 2026-01-14 |
-| 3. Deep Research UX | 0/2 | Not started | - |
+| 3. Deep Research UX | 0/2 | Planned | - |
 | 4. Cross-framework Linking | 0/3 | Not started | - |
