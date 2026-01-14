@@ -71,7 +71,7 @@ Changes needed:
 
 Plans:
 - [x] 04-01: Add linking schema and storage ✅
-- [ ] 04-02: Create linking tools ✓ planned
+- [x] 04-02: Create linking tools ✅
 - [ ] 04-03: Update export to show relationships ✓ planned
 
 Plan files: `.planning/phases/04-cross-framework-linking/`
@@ -86,4 +86,4 @@ Phases 3 and 4 can run in parallel.
 | 1. NPX Installation | 1/1 | Complete | 2026-01-14 |
 | 2. Documentation | - | Complete | 2026-01-14 |
 | 3. Deep Research UX | 2/2 | Complete | 2026-01-15 |
-| 4. Cross-framework Linking | 1/3 | In Progress | - |
+| 4. Cross-framework Linking | 2/3 | In Progress | - |
