@@ -1,6 +1,24 @@
 import { z } from "zod";
 import { ResearchMetadataSchema } from "./citations.js";
 
+// Entity type enum for type-safe references
+export const EntityTypeEnum = z.enum([
+  "business-model-canvas",
+  "lean-canvas",
+  "value-proposition-canvas",
+  "swot-analysis",
+  "user-persona",
+  "competitive-analysis",
+  "market-sizing",
+]);
+
+// Linked entity reference schema
+export const LinkedEntitySchema = z.object({
+  id: z.string(),
+  type: EntityTypeEnum,
+  relationship: z.string().optional(), // e.g., "informs", "validates", "supports"
+});
+
 // Base schema for all entities
 export const BaseEntitySchema = z.object({
   id: z.string(),
@@ -8,6 +26,7 @@ export const BaseEntitySchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   researchMetadata: ResearchMetadataSchema.optional(),
+  linkedEntities: z.array(LinkedEntitySchema).optional(),
 });
 
 // Business Model Canvas - Alexander Osterwalder's 9 blocks
@@ -332,19 +351,12 @@ export const ProjectSchema = z.object({
   // References to contained entities
   entities: z.array(z.object({
     id: z.string(),
-    type: z.enum([
-      "business-model-canvas",
-      "lean-canvas",
-      "value-proposition-canvas",
-      "swot-analysis",
-      "user-persona",
-      "competitive-analysis",
-      "market-sizing",
-    ]),
+    type: EntityTypeEnum,
   })),
 });
 
 // Type exports
+export type LinkedEntity = z.infer<typeof LinkedEntitySchema>;
 export type BusinessModelCanvas = z.infer<typeof BusinessModelCanvasSchema>;
 export type LeanCanvas = z.infer<typeof LeanCanvasSchema>;
 export type ValuePropositionCanvas = z.infer<typeof ValuePropositionCanvasSchema>;
