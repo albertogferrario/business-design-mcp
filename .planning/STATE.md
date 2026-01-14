@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-14)
 ## Current Position
 
 Phase: 1 of 2 (NPX Installation)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-01-14 — Roadmap updated (removed project-local storage phase)
+Plan: 01-01-PLAN.md ready
+Status: Ready to execute
+Last activity: 2026-01-14 — Phase 1 planned (1 plan)
 
 Progress: ░░░░░░░░░░ 0%
 
@@ -41,6 +41,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - Keep home directory storage for cross-project sharing
+- Package name `business-design-mcp` is available on npm
 
 ### Pending Todos
 
@@ -53,5 +54,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-14
-Stopped at: Roadmap updated after requirement change
+Stopped at: Phase 1 plan created
 Resume file: None
