@@ -11,6 +11,7 @@ import {
 } from "./project.js";
 import { createSwotAnalysis } from "./swot.js";
 import { createBusinessModelCanvas } from "./canvas.js";
+import { linkEntitiesTool } from "./linking.js";
 
 describe("Project Management Tools", () => {
   describe("createProject", () => {
@@ -182,6 +183,158 @@ describe("Project Management Tools", () => {
       expect(result).toContain("# Export Test");
       expect(result).toContain("## SWOT Analysis: Test SWOT");
       expect(result).toContain("Strength item");
+    });
+
+    it("should include linkedEntityDetails with resolved names in JSON export", async () => {
+      const project = await createProject({ name: "Linked Export Test" });
+      const swot = await createSwotAnalysis({
+        projectId: project.id,
+        name: "My SWOT",
+        strengths: [{ item: "Test" }],
+        weaknesses: [{ item: "Test" }],
+        opportunities: [{ item: "Test" }],
+        threats: [{ item: "Test" }],
+      });
+      const bmc = await createBusinessModelCanvas({
+        projectId: project.id,
+        name: "My Canvas",
+        customerSegments: [{ segment: "Test" }],
+        valuePropositions: [{ proposition: "Test" }],
+        channels: [{ channel: "Test" }],
+        customerRelationships: [{ relationship: "Test" }],
+        revenueStreams: [{ stream: "Test" }],
+        keyResources: [{ resource: "Test" }],
+        keyActivities: [{ activity: "Test" }],
+        keyPartnerships: [{ partner: "Test" }],
+        costStructure: [{ cost: "Test" }],
+      });
+
+      // Link SWOT to BMC
+      await linkEntitiesTool({
+        sourceEntityId: swot.id,
+        targetEntityId: bmc.id,
+        relationship: "informs",
+      });
+
+      const result = await exportProject({
+        projectId: project.id,
+        format: "json",
+      });
+
+      const parsed = JSON.parse(result);
+      const linkedSwot = parsed.entities.find((e: { name: string }) => e.name === "My SWOT");
+      expect(linkedSwot.linkedEntityDetails).toBeDefined();
+      expect(linkedSwot.linkedEntityDetails).toHaveLength(1);
+      expect(linkedSwot.linkedEntityDetails[0].name).toBe("My Canvas");
+      expect(linkedSwot.linkedEntityDetails[0].relationship).toBe("informs");
+    });
+
+    it("should show Linked Entities section in markdown export", async () => {
+      const project = await createProject({ name: "Linked Markdown Test" });
+      const swot = await createSwotAnalysis({
+        projectId: project.id,
+        name: "Analysis SWOT",
+        strengths: [{ item: "Test" }],
+        weaknesses: [{ item: "Test" }],
+        opportunities: [{ item: "Test" }],
+        threats: [{ item: "Test" }],
+      });
+      const bmc = await createBusinessModelCanvas({
+        projectId: project.id,
+        name: "Target Canvas",
+        customerSegments: [{ segment: "Test" }],
+        valuePropositions: [{ proposition: "Test" }],
+        channels: [{ channel: "Test" }],
+        customerRelationships: [{ relationship: "Test" }],
+        revenueStreams: [{ stream: "Test" }],
+        keyResources: [{ resource: "Test" }],
+        keyActivities: [{ activity: "Test" }],
+        keyPartnerships: [{ partner: "Test" }],
+        costStructure: [{ cost: "Test" }],
+      });
+
+      // Link SWOT to BMC
+      await linkEntitiesTool({
+        sourceEntityId: swot.id,
+        targetEntityId: bmc.id,
+        relationship: "validates",
+      });
+
+      const result = await exportProject({
+        projectId: project.id,
+        format: "markdown",
+      });
+
+      expect(result).toContain("### Linked Entities");
+      expect(result).toContain("**Business Model Canvas**: Target Canvas (validates)");
+    });
+
+    it("should include Relationships Overview section in markdown export", async () => {
+      const project = await createProject({ name: "Overview Test" });
+      const swot = await createSwotAnalysis({
+        projectId: project.id,
+        name: "Source SWOT",
+        strengths: [{ item: "Test" }],
+        weaknesses: [{ item: "Test" }],
+        opportunities: [{ item: "Test" }],
+        threats: [{ item: "Test" }],
+      });
+      const bmc = await createBusinessModelCanvas({
+        projectId: project.id,
+        name: "Dest Canvas",
+        customerSegments: [{ segment: "Test" }],
+        valuePropositions: [{ proposition: "Test" }],
+        channels: [{ channel: "Test" }],
+        customerRelationships: [{ relationship: "Test" }],
+        revenueStreams: [{ stream: "Test" }],
+        keyResources: [{ resource: "Test" }],
+        keyActivities: [{ activity: "Test" }],
+        keyPartnerships: [{ partner: "Test" }],
+        costStructure: [{ cost: "Test" }],
+      });
+
+      await linkEntitiesTool({
+        sourceEntityId: swot.id,
+        targetEntityId: bmc.id,
+        relationship: "supports",
+      });
+
+      const result = await exportProject({
+        projectId: project.id,
+        format: "markdown",
+      });
+
+      expect(result).toContain("## Relationships Overview");
+      expect(result).toContain("Source SWOT → Dest Canvas (supports)");
+    });
+
+    it("should handle entities with no links gracefully", async () => {
+      const project = await createProject({ name: "No Links Test" });
+      await createSwotAnalysis({
+        projectId: project.id,
+        name: "Standalone SWOT",
+        strengths: [{ item: "Test" }],
+        weaknesses: [{ item: "Test" }],
+        opportunities: [{ item: "Test" }],
+        threats: [{ item: "Test" }],
+      });
+
+      const jsonResult = await exportProject({
+        projectId: project.id,
+        format: "json",
+      });
+
+      const parsed = JSON.parse(jsonResult);
+      expect(parsed.entities[0].linkedEntityDetails).toBeUndefined();
+
+      const mdResult = await exportProject({
+        projectId: project.id,
+        format: "markdown",
+      });
+
+      expect(mdResult).toContain("## Relationships Overview");
+      expect(mdResult).toContain("No entity relationships defined.");
+      expect(mdResult).not.toContain("### Linked Entities");
     });
   });
 
