@@ -23,7 +23,7 @@ None
 **Plans**: TBD
 
 Plans:
-- [ ] 01-01: Configure package.json for npm publishing
+- [x] 01-01: Configure package.json for npm publishing
 - [ ] 01-02: Test npx installation flow
 
 ### Phase 2: Documentation
@@ -42,5 +42,5 @@ Phases execute in numeric order: 1 → 2
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. NPX Installation | 0/2 | Not started | - |
+| 1. NPX Installation | 1/2 | In progress | - |
 | 2. Documentation | 0/1 | Not started | - |
