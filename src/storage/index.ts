@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import { join } from "path";
 import { homedir } from "os";
-import type { Project, EntityType } from "../schemas/index.js";
+import type { Project, EntityType, LinkedEntity } from "../schemas/index.js";
 
 // Storage error types
 export type StorageErrorCode =
@@ -270,6 +270,124 @@ export async function listEntitiesByType(
 ): Promise<EntityType[]> {
   const entities = await listEntitiesByProject(projectId);
   return entities.filter((e) => e.type === type);
+}
+
+// Entity linking operations
+
+/**
+ * Link two entities together. Creates a one-way link from source to target.
+ * Both entities must exist and belong to the same project.
+ */
+export async function linkEntities(
+  sourceId: string,
+  targetId: string,
+  relationship?: string
+): Promise<boolean> {
+  await ensureDirectories();
+
+  const source = await getEntity(sourceId);
+  if (!source) {
+    throw new StorageError(`Source entity ${sourceId} not found`, "NOT_FOUND");
+  }
+
+  const target = await getEntity(targetId);
+  if (!target) {
+    throw new StorageError(`Target entity ${targetId} not found`, "NOT_FOUND");
+  }
+
+  // Verify both entities belong to the same project
+  if (source.projectId !== target.projectId) {
+    throw new StorageError(
+      "Cannot link entities from different projects",
+      "INVALID_DATA"
+    );
+  }
+
+  // Initialize linkedEntities array if needed
+  const linkedEntities = source.linkedEntities ?? [];
+
+  // Check for duplicate link
+  if (linkedEntities.some((link) => link.id === targetId)) {
+    return false; // Link already exists
+  }
+
+  // Add the link
+  linkedEntities.push({
+    id: targetId,
+    type: target.type,
+    relationship,
+  });
+
+  // Save the updated entity
+  await updateEntity({ ...source, linkedEntities });
+
+  return true;
+}
+
+/**
+ * Remove a link between two entities.
+ */
+export async function unlinkEntities(
+  sourceId: string,
+  targetId: string
+): Promise<boolean> {
+  await ensureDirectories();
+
+  const source = await getEntity(sourceId);
+  if (!source) {
+    return false;
+  }
+
+  const linkedEntities = source.linkedEntities ?? [];
+  const initialLength = linkedEntities.length;
+
+  // Filter out the target link
+  const filteredLinks = linkedEntities.filter((link) => link.id !== targetId);
+
+  if (filteredLinks.length === initialLength) {
+    return false; // Link didn't exist
+  }
+
+  // Save the updated entity
+  await updateEntity({
+    ...source,
+    linkedEntities: filteredLinks.length > 0 ? filteredLinks : undefined,
+  });
+
+  return true;
+}
+
+/**
+ * Get all linked entities for a given entity, with their full data resolved.
+ */
+export async function getLinkedEntities(
+  entityId: string
+): Promise<Array<{ entity: EntityType; relationship?: string }>> {
+  await ensureDirectories();
+
+  const source = await getEntity(entityId);
+  if (!source) {
+    return [];
+  }
+
+  const linkedEntities = source.linkedEntities ?? [];
+  if (linkedEntities.length === 0) {
+    return [];
+  }
+
+  const results: Array<{ entity: EntityType; relationship?: string }> = [];
+
+  for (const link of linkedEntities) {
+    const entity = await getEntity(link.id);
+    if (entity) {
+      results.push({
+        entity,
+        relationship: link.relationship,
+      });
+    }
+  }
+
+  return results;
 }
 
 // Export utilities
