@@ -18,12 +18,25 @@ export type FrameworkType =
 
 export const SYSTEM_PROMPT = `You are an expert business analyst and market researcher. Your task is to provide accurate, data-driven insights with proper citations.
 
-Guidelines:
+## Guidelines
 - Always cite sources for numerical data and statistics
 - Use recent data (prefer sources from the last 2 years)
 - Be specific with numbers (avoid vague terms like "large" or "significant")
 - Acknowledge uncertainty when data is limited
-- Structure your response clearly with headers and bullet points`;
+
+## Structured Output Requirements
+- Use markdown with consistent headers: ## for main sections, ### for subsections
+- Cite data inline: "[Source Title](URL)" immediately after each data point
+- Always include explicit numeric values with units (e.g., "$4.5 billion" not "large market")
+- For percentages, use "X.X%" format (e.g., "12.5%" not "around 12 percent")
+- Each data point should have its source URL on the same line
+
+## Citation Format
+When providing numerical data, use this format:
+"The market is valued at $X.X billion [Source Name](URL)"
+"Growth rate is X.X% CAGR [Source Name](URL)"
+
+Cite each data point with its source URL for traceability.`;
 
 export function generateResearchPrompt(
   framework: FrameworkType,
@@ -36,33 +49,33 @@ Research the market for: ${ctx.businessDescription}
 Industry: ${ctx.industry || "Not specified - please identify"}
 Geography: ${ctx.geography || "Global"}
 
-Provide a comprehensive market sizing analysis:
+Provide a comprehensive market sizing analysis with exact figures.
 
 ## TAM (Total Addressable Market)
-- Total market size in USD (annual revenue)
+**Format:** TAM: $X.X billion (Source: [Name](URL))
+- Total market size in USD (annual revenue) with source citation on same line
 - Calculation methodology (top-down or bottom-up)
-- Data sources with publication dates
 - Key assumptions
 
 ## SAM (Serviceable Addressable Market)
+**Format:** SAM: $X.X billion (Source: [Name](URL))
 - Target segments that can realistically be served
 - Geographic or demographic constraints
-- Estimated market size for target segments
 - Percentage of TAM
 
 ## SOM (Serviceable Obtainable Market)
+**Format:** SOM: $X.X million (Source: [Name](URL))
 - Realistic market share achievable in 3-5 years
 - Based on competitive landscape analysis
-- Capture strategy considerations
 - Percentage of SAM
 
 ## Market Growth
-- CAGR (Compound Annual Growth Rate)
+**Format:** CAGR: X.X% (Source: [Name](URL))
 - Key growth drivers
 - Market trends affecting growth
 - Growth projections for next 5 years
 
-Provide specific numbers with sources. Format currency in USD.
+Cite each data point with its source URL. Use explicit numbers (not "large" or "significant").
 `,
 
     "competitive-analysis": (ctx) => `
@@ -71,44 +84,47 @@ Research competitors for: ${ctx.businessDescription}
 Industry: ${ctx.industry || "Not specified - please identify"}
 Known competitors to include: ${ctx.competitors?.join(", ") || "Research and identify top competitors"}
 
-Analyze 5-10 major competitors. For each provide:
+Analyze 5-10 major competitors. Use exactly this structure for each competitor:
 
-## Competitor Profile
-- Company name
-- Website URL
-- Brief description (1-2 sentences)
-- Founded year
-- Funding status/amount (if startup)
-- Employee count estimate
+## [Competitor Name]
 
-## Strengths (3-5 each)
-- What they do well
-- Competitive advantages
+Brief description (1-2 sentences). Website: [URL]
 
-## Weaknesses (3-5 each)
-- Areas of weakness
-- Customer complaints
+### Strengths
+- [Strength 1]
+- [Strength 2]
+- [Strength 3]
 
-## Pricing
-- Pricing model (subscription, usage-based, etc.)
-- Price range or tiers
-- Free tier availability
+### Weaknesses
+- [Weakness 1]
+- [Weakness 2]
+- [Weakness 3]
 
-## Market Position
-- Estimated market share (if available)
-- Primary target audience
-- Geographic focus
+### Pricing
+- Pricing model: [subscription/usage-based/etc.]
+- Price range: [$X-$Y/month or similar]
 
-## Key Features
-- Core product features
-- Unique differentiators
+### Market Position
+- Estimated market share: X% [Source](URL) (if available)
+- Target audience: [description]
 
-After analyzing competitors, provide:
+---
+
+Repeat ## [Competitor Name] section for each competitor.
+
+After all competitors, provide:
 
 ## Our Potential Position
-- Key differentiators we could leverage
-- Gaps in the market
-- Opportunities to exploit
+### Differentiators
+- [What we could do better]
+
+### Gaps
+- [Unserved needs in market]
+
+### Opportunities
+- [Specific opportunities to pursue]
+
+Cite each data point with its source URL.
 `,
 
     "user-persona": (ctx) => `
