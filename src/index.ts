@@ -81,6 +81,8 @@ import {
   deepResearchSchema,
   populateFramework,
   populateFrameworkSchema,
+  researchAndCreate,
+  researchAndCreateSchema,
 } from "./tools/index.js";
 
 import { getEntity } from "./storage/index.js";
@@ -322,6 +324,13 @@ server.tool(
   populateFrameworkSchema.shape,
   { title: "Create a framework entity from Deep Research results with citations" },
   async (args) => jsonResponse(await populateFramework(populateFrameworkSchema.parse(args)))
+);
+
+server.tool(
+  "research_and_create",
+  researchAndCreateSchema.shape,
+  { title: "Research a framework using AI Deep Research and create entity in one step" },
+  async (args) => jsonResponse(await researchAndCreate(researchAndCreateSchema.parse(args)))
 );
 
 // ============================================================================
