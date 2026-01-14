@@ -295,42 +295,42 @@ server.tool(
 );
 
 // ============================================================================
-// OPENAI DEEP RESEARCH
+// DEEP RESEARCH (AI-POWERED)
 // ============================================================================
 
 server.tool(
-  "configure_openai",
-  configureOpenAISchema.shape,
-  { title: "Configure OpenAI API key for Deep Research (alternative to OPENAI_API_KEY env var)" },
-  async (args) => jsonResponse(await configureOpenAI(configureOpenAISchema.parse(args)))
-);
-
-server.tool(
-  "check_openai_config",
-  {},
-  { title: "Check if OpenAI API key is configured" },
-  async () => jsonResponse(await checkOpenAIConfig())
+  "research_and_create",
+  researchAndCreateSchema.shape,
+  { title: "RECOMMENDED: Research and create a framework entity in one step using AI Deep Research" },
+  async (args) => jsonResponse(await researchAndCreate(researchAndCreateSchema.parse(args)))
 );
 
 server.tool(
   "deep_research",
   deepResearchSchema.shape,
-  { title: "Execute OpenAI Deep Research to gather real market data for a framework" },
+  { title: "Research a framework using AI (returns data for populate_framework). Use research_and_create instead for simpler workflow." },
   async (args) => jsonResponse(await deepResearch(deepResearchSchema.parse(args)))
 );
 
 server.tool(
   "populate_framework",
   populateFrameworkSchema.shape,
-  { title: "Create a framework entity from Deep Research results with citations" },
+  { title: "Create entity from deep_research results. Use research_and_create instead for simpler workflow." },
   async (args) => jsonResponse(await populateFramework(populateFrameworkSchema.parse(args)))
 );
 
 server.tool(
-  "research_and_create",
-  researchAndCreateSchema.shape,
-  { title: "Research a framework using AI Deep Research and create entity in one step" },
-  async (args) => jsonResponse(await researchAndCreate(researchAndCreateSchema.parse(args)))
+  "configure_openai",
+  configureOpenAISchema.shape,
+  { title: "Configure OpenAI API key for Deep Research (not needed if OPENAI_API_KEY env var is set)" },
+  async (args) => jsonResponse(await configureOpenAI(configureOpenAISchema.parse(args)))
+);
+
+server.tool(
+  "check_openai_config",
+  {},
+  { title: "Check if OpenAI API key is configured for Deep Research" },
+  async () => jsonResponse(await checkOpenAIConfig())
 );
 
 // ============================================================================
