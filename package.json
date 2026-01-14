@@ -7,6 +7,19 @@
   "bin": {
     "business-design-mcp": "dist/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/albertogferrario/business-design-mcp.git"
+  },
+  "homepage": "https://github.com/albertogferrario/business-design-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/albertogferrario/business-design-mcp/issues"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
