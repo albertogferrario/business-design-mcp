@@ -100,3 +100,13 @@ export {
   researchAndCreateSchema,
   type ResearchAndCreateResponse,
 } from "./research.js";
+
+// Entity Linking
+export {
+  linkEntitiesTool,
+  linkEntitiesSchema,
+  unlinkEntitiesTool,
+  unlinkEntitiesSchema,
+  getLinkedEntitiesTool,
+  getLinkedEntitiesSchema,
+} from "./linking.js";
