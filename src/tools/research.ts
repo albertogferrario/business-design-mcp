@@ -190,6 +190,107 @@ export interface PopulateFrameworkResponse {
   citationCount: number;
 }
 
+// Combined Research and Create Tool
+export const researchAndCreateSchema = z.object({
+  projectId: z.string().describe("Project to create entity in"),
+  frameworkType: z
+    .enum([
+      "market-sizing",
+      "competitive-analysis",
+      "user-persona",
+      "swot-analysis",
+      "business-model-canvas",
+      "lean-canvas",
+      "value-proposition-canvas",
+    ])
+    .describe("Framework type to research and create"),
+  name: z.string().describe("Name for the new entity"),
+  description: z.string().optional().describe("Optional description"),
+  context: z
+    .object({
+      businessDescription: z
+        .string()
+        .describe("Description of the business/product (required)"),
+      industry: z.string().optional().describe("Industry sector"),
+      geography: z.string().optional().describe("Target geography"),
+      targetCustomers: z
+        .string()
+        .optional()
+        .describe("Target customer description"),
+      productOrService: z
+        .string()
+        .optional()
+        .describe("Product or service details"),
+      competitors: z
+        .array(z.string())
+        .optional()
+        .describe("Known competitors to include"),
+    })
+    .describe("Research context"),
+  model: z
+    .enum(["o3-deep-research-2025-06-26", "o4-mini-deep-research-2025-06-26"])
+    .default("o4-mini-deep-research-2025-06-26")
+    .describe("Model to use (mini is faster and cheaper)"),
+});
+
+export interface ResearchAndCreateResponse {
+  entity: {
+    id: string;
+    type: string;
+    name: string;
+  };
+  research: {
+    confidence: number;
+    citationCount: number;
+    missingFields: string[];
+  };
+  usage: {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    estimatedCostUSD: number;
+  };
+}
+
+export async function researchAndCreate(
+  args: z.infer<typeof researchAndCreateSchema>
+): Promise<ResearchAndCreateResponse> {
+  // Execute deep research
+  const researchResult = await deepResearch({
+    projectId: args.projectId,
+    frameworkType: args.frameworkType,
+    context: args.context,
+    model: args.model,
+  });
+
+  // Create entity with research data
+  const entityResult = await populateFramework({
+    projectId: args.projectId,
+    frameworkType: args.frameworkType,
+    name: args.name,
+    description: args.description,
+    researchData: researchResult.parsedData,
+    citations: researchResult.citations,
+    researchModel: args.model,
+    confidence: researchResult.confidence,
+  });
+
+  // Return combined response
+  return {
+    entity: {
+      id: entityResult.entityId,
+      type: entityResult.type,
+      name: entityResult.name,
+    },
+    research: {
+      confidence: researchResult.confidence,
+      citationCount: researchResult.citations.length,
+      missingFields: researchResult.missingFields,
+    },
+    usage: researchResult.usage,
+  };
+}
+
 export async function populateFramework(
   args: z.infer<typeof populateFrameworkSchema>
 ): Promise<PopulateFrameworkResponse> {
