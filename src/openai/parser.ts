@@ -21,7 +21,35 @@ function generateCitationId(): string {
   return `cit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 }
 
-function processCitations(rawCitations: RawCitation[]): Citation[] {
+// Section mapping for citation field association
+interface SectionRange {
+  start: number;
+  end: number;
+}
+
+type FieldSections = Record<string, SectionRange>;
+
+// Map a citation to fields based on its position in content
+function mapCitationToFields(
+  citation: RawCitation,
+  fieldSections: FieldSections
+): string[] {
+  const relevantFields: string[] = [];
+
+  for (const [fieldName, range] of Object.entries(fieldSections)) {
+    // Citation falls within this section
+    if (citation.startIndex >= range.start && citation.startIndex < range.end) {
+      relevantFields.push(fieldName);
+    }
+  }
+
+  return relevantFields;
+}
+
+function processCitations(
+  rawCitations: RawCitation[],
+  fieldSections?: FieldSections
+): Citation[] {
   const now = new Date().toISOString();
   const seen = new Set<string>();
 
@@ -36,8 +64,45 @@ function processCitations(rawCitations: RawCitation[]): Citation[] {
       title: c.title,
       url: c.url,
       accessedAt: now,
-      relevantFields: [],
+      relevantFields: fieldSections ? mapCitationToFields(c, fieldSections) : [],
     }));
+}
+
+// Extract section positions from content for citation mapping
+function extractSectionPositions(
+  content: string,
+  sectionPatterns: Record<string, string>
+): FieldSections {
+  const fieldSections: FieldSections = {};
+  const contentLength = content.length;
+
+  // Find all section positions
+  interface SectionPos {
+    field: string;
+    start: number;
+  }
+
+  const positions: SectionPos[] = [];
+
+  for (const [fieldName, patternStr] of Object.entries(sectionPatterns)) {
+    const pattern = new RegExp(`##?\\s*(?:${patternStr})`, "i");
+    const match = content.match(pattern);
+    if (match && match.index !== undefined) {
+      positions.push({ field: fieldName, start: match.index });
+    }
+  }
+
+  // Sort by position
+  positions.sort((a, b) => a.start - b.start);
+
+  // Assign end positions (next section start or end of content)
+  for (let i = 0; i < positions.length; i++) {
+    const current = positions[i];
+    const nextStart = i + 1 < positions.length ? positions[i + 1].start : contentLength;
+    fieldSections[current.field] = { start: current.start, end: nextStart };
+  }
+
+  return fieldSections;
 }
 
 // Extract numerical values with units
@@ -102,8 +167,19 @@ export function parseMarketSizingResearch(
   content: string,
   rawCitations: RawCitation[]
 ): ParsedResearchResult {
-  const citations = processCitations(rawCitations);
   const missingFields: string[] = [];
+
+  // Calculate section positions for citation mapping
+  const sectionPatterns = {
+    "tam": "TAM|Total Addressable Market",
+    "sam": "SAM|Serviceable Addressable Market",
+    "som": "SOM|Serviceable Obtainable Market",
+    "growthRate": "Growth|CAGR|Market Growth",
+  };
+  const fieldSections = extractSectionPositions(content, sectionPatterns);
+
+  // Process citations with section mapping
+  const citations = processCitations(rawCitations, fieldSections);
 
   // Currency patterns
   const currencyPatterns = [
@@ -183,11 +259,45 @@ export function parseCompetitiveAnalysisResearch(
   content: string,
   rawCitations: RawCitation[]
 ): ParsedResearchResult {
-  const citations = processCitations(rawCitations);
   const missingFields: string[] = [];
 
+  // Build section mapping for competitors and our position
+  // Find all competitor sections (## [Name] followed by ### Strengths/Weaknesses)
+  const fieldSections: FieldSections = {};
+  const competitorSectionPattern = /##\s+(?!Our\s+Position|Potential\s+Position|Summary|Overview|Market)([A-Za-z0-9\s&.-]+?)(?:\n)/gi;
+  let competitorIndex = 0;
+  let match;
+
+  while ((match = competitorSectionPattern.exec(content)) !== null) {
+    if (match.index !== undefined) {
+      const competitorName = match[1].trim();
+      // Find next ## section or end of content
+      const nextSectionMatch = content.slice(match.index + match[0].length).match(/\n##\s+/);
+      const endPos = nextSectionMatch
+        ? match.index + match[0].length + nextSectionMatch.index!
+        : content.length;
+
+      fieldSections[`competitors[${competitorIndex}]`] = {
+        start: match.index,
+        end: endPos,
+      };
+      competitorIndex++;
+    }
+  }
+
+  // Add our position section
+  const ourPosMatch = content.match(/##\s*(?:Our\s+(?:Potential\s+)?Position)/i);
+  if (ourPosMatch && ourPosMatch.index !== undefined) {
+    fieldSections["ourPosition"] = {
+      start: ourPosMatch.index,
+      end: content.length,
+    };
+  }
+
+  // Process citations with section mapping
+  const citations = processCitations(rawCitations, fieldSections);
+
   // Extract competitor sections
-  const competitorPattern = /##\s*(?:Competitor\s*\d+:?\s*)?([A-Za-z0-9\s]+?)(?:\n|$)/g;
   const competitors: Array<{
     name: string;
     strengths: string[];
@@ -205,7 +315,7 @@ export function parseCompetitiveAnalysisResearch(
 
     // Skip non-competitor sections
     if (
-      /TAM|SAM|SOM|Market|Our Position|Summary|Overview/i.test(header || "")
+      /TAM|SAM|SOM|Market|Our Position|Potential Position|Summary|Overview/i.test(header || "")
     ) {
       continue;
     }
