@@ -14,6 +14,7 @@ export interface ParsedResearchResult {
   citations: Citation[];
   confidence: number;
   missingFields: string[];
+  warnings: string[];
   rawContent: string;
 }
 
@@ -103,6 +104,17 @@ function extractSectionPositions(
   }
 
   return fieldSections;
+}
+
+// Validation helpers for extracted data
+function isReasonableMarketSize(value: number): boolean {
+  // $1M to $100T is reasonable market size range
+  return value >= 1_000_000 && value <= 100_000_000_000_000;
+}
+
+function isReasonableGrowthRate(rate: number): boolean {
+  // -50% to 500% is reasonable CAGR range
+  return rate >= -50 && rate <= 500;
 }
 
 // Extract numerical values with units
@@ -220,6 +232,39 @@ export function parseMarketSizingResearch(
   if (!growthRate) confidence -= 10;
   if (citations.length === 0) confidence -= 20;
 
+  // Validation warnings
+  const warnings: string[] = [];
+
+  // Validate TAM >= SAM >= SOM relationship
+  if (tamValue && samValue && tamValue < samValue) {
+    warnings.push("Data inconsistency: TAM is smaller than SAM");
+    confidence -= 15;
+  }
+  if (samValue && somValue && samValue < somValue) {
+    warnings.push("Data inconsistency: SAM is smaller than SOM");
+    confidence -= 15;
+  }
+
+  // Validate market size reasonableness
+  if (tamValue && !isReasonableMarketSize(tamValue)) {
+    warnings.push(`TAM value ${tamValue} outside reasonable range ($1M - $100T)`);
+    confidence -= 10;
+  }
+  if (samValue && !isReasonableMarketSize(samValue)) {
+    warnings.push(`SAM value ${samValue} outside reasonable range ($1M - $100T)`);
+    confidence -= 10;
+  }
+  if (somValue && !isReasonableMarketSize(somValue)) {
+    warnings.push(`SOM value ${somValue} outside reasonable range ($1M - $100T)`);
+    confidence -= 10;
+  }
+
+  // Validate growth rate reasonableness
+  if (growthRate !== undefined && !isReasonableGrowthRate(growthRate)) {
+    warnings.push(`Growth rate ${growthRate}% outside reasonable range (-50% to 500%)`);
+    confidence -= 5;
+  }
+
   const data = {
     tam: {
       value: tamValue,
@@ -251,6 +296,7 @@ export function parseMarketSizingResearch(
     citations,
     confidence: Math.max(0, confidence),
     missingFields,
+    warnings,
     rawContent: content,
   };
 }
@@ -345,6 +391,24 @@ export function parseCompetitiveAnalysisResearch(
   if (competitors.length < 3) confidence -= 20;
   if (citations.length === 0) confidence -= 20;
 
+  // Validation warnings
+  const warnings: string[] = [];
+
+  // Warn if fewer than 3 competitors found
+  if (competitors.length > 0 && competitors.length < 3) {
+    warnings.push(`Only ${competitors.length} competitor(s) found; recommend at least 3 for thorough analysis`);
+  }
+
+  // Warn if any competitor has zero strengths or weaknesses
+  for (const competitor of competitors) {
+    if (competitor.strengths.length === 0) {
+      warnings.push(`Competitor "${competitor.name}" has no strengths identified`);
+    }
+    if (competitor.weaknesses.length === 0) {
+      warnings.push(`Competitor "${competitor.name}" has no weaknesses identified`);
+    }
+  }
+
   const data = {
     competitors: competitors.map((c) => ({
       name: c.name,
@@ -366,6 +430,7 @@ export function parseCompetitiveAnalysisResearch(
     citations,
     confidence: Math.max(0, confidence),
     missingFields,
+    warnings,
     rawContent: content,
   };
 }
@@ -439,6 +504,7 @@ export function parseUserPersonaResearch(
     citations,
     confidence: Math.max(0, confidence),
     missingFields,
+    warnings: [],
     rawContent: content,
   };
 }
@@ -482,6 +548,7 @@ export function parseSwotAnalysisResearch(
     citations,
     confidence: Math.max(0, confidence),
     missingFields,
+    warnings: [],
     rawContent: content,
   };
 }
@@ -554,6 +621,7 @@ export function parseBusinessModelCanvasResearch(
     citations,
     confidence: Math.max(0, confidence),
     missingFields,
+    warnings: [],
     rawContent: content,
   };
 }
@@ -615,6 +683,7 @@ export function parseLeanCanvasResearch(
     citations,
     confidence: Math.max(0, confidence),
     missingFields,
+    warnings: [],
     rawContent: content,
   };
 }
@@ -670,6 +739,7 @@ export function parseValuePropositionCanvasResearch(
     citations,
     confidence: Math.max(0, confidence),
     missingFields,
+    warnings: [],
     rawContent: content,
   };
 }
@@ -700,6 +770,7 @@ export function parseResearchResult(
         citations: processCitations(rawCitations),
         confidence: 0,
         missingFields: ["unknown-framework"],
+        warnings: [],
         rawContent: content,
       };
   }
