@@ -98,10 +98,10 @@ Plan files: `.planning/phases/04-cross-framework-linking/`
 **Goal**: Improve deep research quality with better prompts and source handling
 **Depends on**: Previous milestone complete
 **Research**: Unlikely (internal improvements)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
-- [ ] 05-01: TBD (run /gsd:plan-phase 5 to break down)
+- [x] 05-01: Enhanced prompts, citation mapping, and validation
 
 Plan files: `.planning/phases/05-research-enhancement/`
 
@@ -151,7 +151,7 @@ Phases execute sequentially: 5 → 6 → 7 → 8
 | 2. Documentation | v1.0 | - | Complete | 2026-01-14 |
 | 3. Deep Research UX | v1.1 | 2/2 | Complete | 2026-01-15 |
 | 4. Cross-framework Linking | v1.1 | 3/3 | Complete | 2026-01-15 |
-| 5. Research Enhancement | v1.2 | 0/? | Not started | - |
+| 5. Research Enhancement | v1.2 | 1/1 | Complete | 2026-01-15 |
 | 6. AI-Powered Suggestions | v1.2 | 0/? | Not started | - |
 | 7. Competitive Intelligence | v1.2 | 0/? | Not started | - |
 | 8. Smart Validation | v1.2 | 0/? | Not started | - |
