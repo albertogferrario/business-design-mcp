@@ -94,10 +94,29 @@ import {
 
 import { getEntity } from "./storage/index.js";
 
-const server = new McpServer({
-  name: "business-design",
-  version: "1.0.0",
-});
+const server = new McpServer(
+  {
+    name: "business-design",
+    version: "1.0.0",
+  },
+  {
+    instructions: [
+      "Business Design MCP — no API keys required for core usage.",
+      "",
+      "Workflow:",
+      "1. Create a project with create_project",
+      "2. Add entities using the create_* tools (business_model_canvas, lean_canvas, swot_analysis, etc.)",
+      "3. Link related entities with link_entities",
+      "4. Export with export_project",
+      "",
+      "The create_* and update_* tools work immediately — populate them with your own analysis.",
+      "",
+      "Optional enhancement: if an OpenAI API key is configured (via OPENAI_API_KEY env var or configure_openai tool),",
+      "the research_and_create and deep_research tools can do real-time web research to populate frameworks with cited data.",
+      "These two tools are the ONLY ones that require an API key.",
+    ].join("\n"),
+  }
+);
 
 // ============================================================================
 // PROJECT MANAGEMENT TOOLS
@@ -308,21 +327,21 @@ server.tool(
 server.tool(
   "research_and_create",
   researchAndCreateSchema.shape,
-  { title: "RECOMMENDED: Research and create a framework entity in one step using AI Deep Research" },
+  { title: "Research and create a framework entity in one step using AI Deep Research (requires OpenAI API key)" },
   async (args) => jsonResponse(await researchAndCreate(researchAndCreateSchema.parse(args)))
 );
 
 server.tool(
   "deep_research",
   deepResearchSchema.shape,
-  { title: "Research a framework using AI (returns data for populate_framework). Use research_and_create instead for simpler workflow." },
+  { title: "Research a framework using AI Deep Research (requires OpenAI API key). Returns data for populate_framework." },
   async (args) => jsonResponse(await deepResearch(deepResearchSchema.parse(args)))
 );
 
 server.tool(
   "populate_framework",
   populateFrameworkSchema.shape,
-  { title: "Create entity from deep_research results. Use research_and_create instead for simpler workflow." },
+  { title: "Create entity from deep_research results (research data must be provided, no API key needed)" },
   async (args) => jsonResponse(await populateFramework(populateFrameworkSchema.parse(args)))
 );
 
